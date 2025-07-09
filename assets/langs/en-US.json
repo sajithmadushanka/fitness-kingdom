@@ -1,0 +1,291 @@
+{
+  "app_data": {
+    "app_name": "Fitness Kingdom",
+    "app_description": "Your ultimate fitness companion",
+    "welcome_message": "Welcome to Fitness Kingdom!",
+    "login_prompt": "Please log in to continue",
+    "signup_prompt": "Don't have an account? Sign up now!",
+    "logout_confirmation": "Are you sure you want to log out?",
+    "settings_title": "Settings",
+    "profile_title": "Profile",
+    "notifications_title": "Notifications",
+    "language_title": "Language",
+    "theme_title": "Theme"
+  },
+  "error_messages": {
+    "network_error": "Network error, please try again later.",
+    "login_failed": "Login failed, please check your credentials.",
+    "signup_failed": "Signup failed, please try again.",
+    "data_load_error": "Error loading data, please refresh.",
+    "unknown_error": "An unknown error occurred, please try again."
+  },
+  "success_messages": {
+    "login_success": "Login successful!",
+    "signup_success": "Signup successful! Welcome aboard.",
+    "logout_success": "You have been logged out successfully.",
+    "settings_updated": "Settings updated successfully.",
+    "profile_updated": "Profile updated successfully.",
+    "data_loaded": "Data loaded successfully.",
+    "notification_sent": "Notification sent successfully.",
+    "language_changed": "Language changed successfully.",
+    "theme_changed": "Theme changed successfully."
+  },
+  "exercises": {
+    "dumbbell_bench_press": {
+      "id": 1,
+      "name": "Dumbbell Bench Press",
+      "category": "Chest",
+      "image": "assets/images/dumbell-bench-press.webp",
+      "instructions": [
+        "Lie back on a flat bench holding a dumbbell in each hand with a neutral grip, elbows bent at 90 degrees.",
+        "Press the dumbbells upward until your arms are fully extended, keeping them in line with your chest. Exhale during the pressing movement.",
+        "Pause at the top and then slowly lower the weights back down to the starting position. Inhale as you lower.",
+        "Repeat for the desired number of repetitions."
+      ]
+    },
+    "cable_one_arm_row": {
+      "id": 2,
+      "name": "Cable One Arm Row",
+      "category": "Back",
+      "image": "",
+      "instructions": [
+        "Stand facing a low pulley cable machine with a D-handle attached.",
+        "Grab the handle with one hand, keeping your back straight and knees slightly bent.",
+        "Pull the handle towards your waist, squeezing your shoulder blade at the peak of the movement. Exhale as you pull.",
+        "Slowly return to the starting position with control. Inhale as you release.",
+        "Repeat for reps, then switch arms."
+      ]
+    },
+    "overhead_dumbbell_press": {
+      "id": 3,
+      "name": "Overhead Dumbbell Press",
+      "category": "Shoulders",
+      "image": "assets/images/dumbell-sholder-press.webp",
+      "instructions": [
+        "Sit or stand with a dumbbell in each hand at shoulder height, palms facing forward.",
+        "Press the dumbbells upward until your arms are fully extended overhead. Exhale as you push up.",
+        "Pause briefly at the top, then lower the weights back to the starting position. Inhale during the descent.",
+        "Maintain a tight core and avoid arching your back.",
+        "Repeat for the desired number of reps."
+      ]
+    },
+    "lat_pull_down": {
+      "id": 4,
+      "name": "Lat Pull Down",
+      "category": "Back",
+      "image": "assets/images/lat-pull-down.webp",
+      "instructions": [
+        "Sit down at a lat pull-down machine and grab the bar with a wide grip, palms facing forward.",
+        "Pull the bar down towards your upper chest, squeezing your shoulder blades together. Exhale as you pull.",
+        "Hold for a second at the bottom of the movement.",
+        "Slowly return the bar to the starting position with control. Inhale as you return.",
+        "Repeat for the desired number of reps."
+      ]
+    },
+    "ez_bar_barbell_curl": {
+      "id": 5,
+      "name": "EZ Bar Barbell Curl",
+      "category": "Biceps",
+      "image": "",
+      "instructions": [
+        "Stand upright holding an EZ bar with an underhand grip, hands shoulder-width apart.",
+        "Curl the bar up toward your chest while keeping your elbows close to your torso. Exhale while lifting.",
+        "Squeeze your biceps at the top of the movement.",
+        "Lower the bar slowly back to the starting position. Inhale during the lowering phase.",
+        "Repeat for the desired number of repetitions."
+      ]
+    },
+    "hanging_leg_raises": {
+      "id": 6,
+      "name": "Hanging Leg Raises",
+      "category": "Abs",
+      "image": "assets/images/hanging-leg-raises.webp",
+      "instructions": [
+        "Hang from a pull-up bar with your arms fully extended and legs straight.",
+        "Engage your core and raise your legs up until they are parallel to the ground or higher. Exhale as you raise your legs.",
+        "Pause briefly at the top position.",
+        "Lower your legs back down slowly and under control. Inhale as you lower.",
+        "Repeat for reps, avoiding swinging or using momentum."
+      ]
+    },
+    "barbell_squat": {
+      "id": 7,
+      "name": "Barbell Squat",
+      "category": "Legs",
+      "image": "",
+      "instructions": [
+        "Stand with feet shoulder-width apart and a barbell resting across your upper back.",
+        "Brace your core, bend your knees, and lower your body into a squat. Inhale as you descend.",
+        "Go as low as comfortable while keeping your back straight and knees in line with your toes.",
+        "Push through your heels to return to standing. Exhale as you rise.",
+        "Repeat for reps."
+      ]
+    },
+    "leg_extension": {
+      "id": 8,
+      "name": "Leg Extension",
+      "category": "Legs",
+      "image": "",
+      "instructions": [
+        "Sit on a leg extension machine and place your feet behind the padded bar.",
+        "Extend your legs fully while keeping your back flat against the seat. Exhale during the lift.",
+        "Pause at the top to contract your quads.",
+        "Slowly lower the weight back down. Inhale as you lower.",
+        "Repeat for reps."
+      ]
+    },
+    "leg_curl": {
+      "id": 9,
+      "name": "Leg Curl",
+      "category": "Legs",
+      "image": "",
+      "instructions": [
+        "Lie face down on a leg curl machine with your ankles under the roller pad.",
+        "Curl your legs upward as far as possible. Exhale as you lift.",
+        "Hold briefly at the top and squeeze your hamstrings.",
+        "Lower your legs slowly back to the starting position. Inhale as you return.",
+        "Repeat for reps."
+      ]
+    },
+    "calf_raises": {
+      "id": 10,
+      "name": "Calf Raises",
+      "category": "Legs",
+      "image": "",
+      "instructions": [
+        "Stand on the edge of a step with your heels hanging off.",
+        "Raise your heels as high as possible by contracting your calves. Exhale as you lift.",
+        "Pause briefly at the top.",
+        "Lower your heels below the step slowly. Inhale as you descend.",
+        "Repeat for reps."
+      ]
+    },
+    "cable_lateral_raise": {
+      "id": 11,
+      "name": "Cable Lateral Raise",
+      "category": "Shoulders",
+      "image": "",
+      "instructions": [
+        "Stand next to a low cable pulley with the handle in the hand farthest from the machine.",
+        "Raise your arm out to the side until shoulder height. Exhale as you lift.",
+        "Pause briefly, keeping your arm straight.",
+        "Lower back to the starting position with control. Inhale as you lower.",
+        "Repeat for reps, then switch sides."
+      ]
+    },
+    "dumbbell_shrugs": {
+      "id": 12,
+      "name": "Dumbbell Shrugs",
+      "category": "Shoulders",
+      "image": "",
+      "instructions": [
+        "Hold a dumbbell in each hand with arms at your sides.",
+        "Lift your shoulders as high as possible toward your ears. Exhale as you shrug.",
+        "Pause at the top to contract your traps.",
+        "Lower the dumbbells slowly. Inhale as you return.",
+        "Repeat for reps."
+      ]
+    },
+    "barbell_incline_bench_press": {
+      "id": 13,
+      "name": "Barbell Incline Bench Press",
+      "category": "Chest",
+      "image": "assets/images/incline-dumbell-press.webp",
+      "instructions": [
+        "Lie on an incline bench and grip the barbell slightly wider than shoulder-width.",
+        "Lower the bar to your upper chest. Inhale during the descent.",
+        "Press the bar back up until your arms are extended. Exhale as you press.",
+        "Repeat for the desired number of reps."
+      ]
+    },
+    "barbell_row": {
+      "id": 14,
+      "name": "Barbell Row",
+      "category": "Back",
+      "image": "",
+      "instructions": [
+        "Bend forward at the hips with a barbell in hand, back straight, knees slightly bent.",
+        "Pull the bar toward your lower ribcage. Exhale as you row.",
+        "Pause briefly and squeeze your back.",
+        "Lower the bar slowly. Inhale as you lower.",
+        "Repeat for reps."
+      ]
+    },
+    "cable_cross_over_lower": {
+      "id": 15,
+      "name": "Cable Cross Over (Lower)",
+      "category": "Chest",
+      "image": "",
+      "instructions": [
+        "Stand between two low cable pulleys and grab the handles.",
+        "Step forward with one foot and slightly bend your elbows.",
+        "Bring the handles upward in front of your chest. Exhale as you lift.",
+        "Squeeze your chest at the top, then slowly return. Inhale during the return.",
+        "Repeat for reps."
+      ]
+    },
+    "skull_crusher": {
+      "id": 16,
+      "name": "Skull Crusher",
+      "category": "Triceps",
+      "image": "",
+      "instructions": [
+        "Lie on a flat bench holding an EZ bar with arms extended above your chest.",
+        "Lower the bar by bending your elbows until it's near your forehead. Inhale as you lower.",
+        "Extend your arms to return to the start. Exhale as you push up.",
+        "Repeat for reps, keeping elbows fixed in place."
+      ]
+    },
+    "ab_crunch": {
+      "id": 17,
+      "name": "Ab Crunch",
+      "category": "Abs",
+      "image": "",
+      "instructions": [
+        "Lie on your back with knees bent and hands at the sides of your head.",
+        "Contract your abs and lift your shoulders off the floor. Exhale as you crunch.",
+        "Pause briefly at the top.",
+        "Lower back down slowly. Inhale as you return.",
+        "Repeat for reps."
+      ]
+    },
+    "leg_press": {
+      "id": 18,
+      "name": "Leg Press",
+      "category": "Legs",
+      "image": "",
+      "instructions": [
+        "Sit in the leg press machine with feet shoulder-width apart on the platform.",
+        "Lower the platform by bending your knees. Inhale as you lower.",
+        "Press the weight back up without locking your knees. Exhale as you push.",
+        "Repeat for reps."
+      ]
+    },
+    "cable_face_pull": {
+      "id": 19,
+      "name": "Cable Face Pull",
+      "category": "Shoulders",
+      "image": "",
+      "instructions": [
+        "Attach a rope to a high pulley and grip both ends.",
+        "Pull the rope toward your face, elbows flaring out. Exhale as you pull.",
+        "Pause and squeeze your upper back and rear delts.",
+        "Return to start slowly. Inhale as you return.",
+        "Repeat for reps."
+      ]
+    },
+    "dumbbell_lateral_raise": {
+      "id": 20,
+      "name": "Dumbbell Lateral Raise",
+      "category": "Shoulders",
+      "image": "",
+      "instructions": [
+        "Stand with a dumbbell in each hand at your sides.",
+        "Raise your arms out to the sides until shoulder level. Exhale as you lift.",
+        "Pause briefly, keeping elbows slightly bent.",
+        "Lower the dumbbells slowly. Inhale as you lower.",
+        "Repeat for reps."
+      ]
+    }
+  }
+}
