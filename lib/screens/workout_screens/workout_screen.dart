@@ -1,6 +1,11 @@
+import 'package:fitness_kingdom/data/workout_template_manager.dart';
 import 'package:fitness_kingdom/screens/template_screen/new_template_screen.dart';
 import 'package:fitness_kingdom/screens/workout_screens/workout_tranning_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:fitness_kingdom/models/workout_template.dart'; // Import your WorkoutTemplate model
+import 'package:fitness_kingdom/models/exercise.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // Import your ExerciseModel
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -23,41 +28,6 @@ class WorkoutScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 20, color: Colors.black),
               ),
             ),
-            // // Welcome Section
-            // Container(
-            //   width: double.infinity,
-            //   padding: const EdgeInsets.all(24),
-            //   decoration: BoxDecoration(
-            //     gradient: LinearGradient(
-            //       colors: [
-            //         colorScheme.primary,
-            //         colorScheme.primary.withOpacity(0.8),
-            //       ],
-            //       begin: Alignment.topLeft,
-            //       end: Alignment.bottomRight,
-            //     ),
-            //     borderRadius: BorderRadius.circular(16),
-            //   ),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       Text(
-            //         'Ready to Workout?',
-            //         style: textTheme.headlineMedium?.copyWith(
-            //           color: colorScheme.onPrimary,
-            //           fontWeight: FontWeight.bold,
-            //         ),
-            //       ),
-            //       const SizedBox(height: 8),
-            //       Text(
-            //         'Choose your workout style and get started',
-            //         style: textTheme.bodyMedium?.copyWith(
-            //           color: colorScheme.onPrimary.withOpacity(0.9),
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
             const SizedBox(height: 24),
 
             // Quick Start Section
@@ -79,7 +49,11 @@ class WorkoutScreen extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          _showWorkoutTemplateDialog(context);
+                          // _showWorkoutTemplateDialog(
+                          //   context,
+                          //   tem
+                          // ); // This currently shows a template dialog, not an empty workout.
+                          // You might want to rename this or create a separate dialog for empty workout.
                         },
                         child: const Text('Start Empty Workout'),
                       ),
@@ -104,8 +78,7 @@ class WorkoutScreen extends StatelessWidget {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    print("object");
-                    // // Handle add template
+                    WorkoutTemplateManager().clearAllExercises();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -123,46 +96,41 @@ class WorkoutScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Templates Grid
-            _buildTemplatesGrid(context),
+            // Templates Grid (using FutureBuilder to fetch data)
+            // Templates Grid (listening to Hive updates)
+            ValueListenableBuilder<Box<WorkoutTemplate>>(
+              valueListenable: Hive.box<WorkoutTemplate>(
+                'workoutTemplatesBox',
+              ).listenable(),
+              builder: (context, box, _) {
+                final templates = box.values.toList();
+                if (templates.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No templates found. Create one!',
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  );
+                } else {
+                  return _buildTemplatesGrid(context, templates);
+                }
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTemplatesGrid(BuildContext context) {
+  Widget _buildTemplatesGrid(
+    BuildContext context,
+    List<WorkoutTemplate> templates,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-
-    // Sample template data
-    final templates = [
-      {
-        'name': 'Push Day',
-        'exercises': 8,
-        'lastWorkout': '2 days ago',
-        'icon': Icons.fitness_center,
-      },
-      {
-        'name': 'Pull Day',
-        'exercises': 6,
-        'lastWorkout': '4 days ago',
-        'icon': Icons.sports_gymnastics,
-      },
-      {
-        'name': 'Leg Day',
-        'exercises': 7,
-        'lastWorkout': '1 week ago',
-        'icon': Icons.directions_run,
-      },
-      {
-        'name': 'Cardio',
-        'exercises': 4,
-        'lastWorkout': '3 days ago',
-        'icon': Icons.favorite,
-      },
-    ];
 
     return GridView.builder(
       shrinkWrap: true,
@@ -179,8 +147,15 @@ class WorkoutScreen extends StatelessWidget {
         return Card(
           elevation: 2,
           child: InkWell(
+            onLongPress: () {
+              _deleteDialog(context, template);
+            },
             onTap: () {
-              // Handle template selection
+              // Handle template selection, e.g., show template details dialog
+              _showWorkoutTemplateDialog(
+                context,
+                template,
+              ); // You might want to pass the template data here
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -188,7 +163,7 @@ class WorkoutScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Template Icon
+                  // Template Icon (you might want to add an icon field to WorkoutTemplate model)
                   Container(
                     width: 48,
                     height: 48,
@@ -197,7 +172,7 @@ class WorkoutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      template['icon'] as IconData,
+                      Icons.fitness_center, // Placeholder icon
                       color: colorScheme.onPrimaryContainer,
                       size: 24,
                     ),
@@ -206,7 +181,7 @@ class WorkoutScreen extends StatelessWidget {
 
                   // Template Name
                   Text(
-                    template['name'] as String,
+                    template.name,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -217,7 +192,7 @@ class WorkoutScreen extends StatelessWidget {
 
                   // Exercise Count
                   Text(
-                    '${template['exercises']} exercises',
+                    '${template.exercises.length} exercises',
                     style: textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withOpacity(0.6),
                     ),
@@ -235,7 +210,9 @@ class WorkoutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      template['lastWorkout'] as String,
+                      template.lastWorkoutDate != null
+                          ? _formatLastWorkoutDate(template.lastWorkoutDate!)
+                          : 'Never worked out',
                       style: textTheme.labelSmall?.copyWith(
                         color: colorScheme.onSecondaryContainer,
                       ),
@@ -248,6 +225,28 @@ class WorkoutScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _formatLastWorkoutDate(DateTime lastWorkoutDate) {
+    final now = DateTime.now();
+    final difference = now.difference(lastWorkoutDate);
+
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return '$weeks week${weeks > 1 ? 's' : ''} ago';
+    } else if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).floor();
+      return '$months month${months > 1 ? 's' : ''} ago';
+    } else {
+      final years = (difference.inDays / 365).floor();
+      return '$years year${years > 1 ? 's' : ''} ago';
+    }
   }
 
   int _getCrossAxisCount(BuildContext context) {
@@ -434,7 +433,7 @@ _showDialogWorkout(BuildContext context) {
   );
 }
 
-_showTemplatesDialog(BuildContext context) {
+_showWorkoutTemplateDialog(BuildContext context, template) {
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -444,14 +443,14 @@ _showTemplatesDialog(BuildContext context) {
         elevation: 0,
         backgroundColor: Colors.transparent,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.75,
+          height: MediaQuery.of(context).size.height * 0.7,
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -483,313 +482,9 @@ _showTemplatesDialog(BuildContext context) {
                         ),
                       ),
                     ),
-                    const Text(
-                      'Choose Template',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Handle creating new template
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text(
-                        'New',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Templates List
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _buildTemplateItem(
-                      context,
-                      'Push Day',
-                      'Last: 3 days ago',
-                      Icons.fitness_center,
-                      [
-                        '4 × Incline Bench Press',
-                        '4 × Cable Crossover',
-                        '4 × Skullcrusher',
-                      ],
-                      'Chest, Arms',
-                    ),
-                    _buildTemplateItem(
-                      context,
-                      'Pull Day',
-                      'Last: 1 week ago',
-                      Icons.sports_gymnastics,
-                      [
-                        '4 × Bent Over Row',
-                        '4 × Lat Pulldown',
-                        '3 × Lateral Raise',
-                      ],
-                      'Back, Shoulders',
-                    ),
-                    _buildTemplateItem(
-                      context,
-                      'Leg Day',
-                      'Last: 5 days ago',
-                      Icons.directions_run,
-                      ['4 × Squats', '4 × Leg Press', '3 × Calf Raises'],
-                      'Legs, Glutes',
-                    ),
-                    _buildTemplateItem(
-                      context,
-                      'Core & Cardio',
-                      'Last: Yesterday',
-                      Icons.favorite,
-                      ['4 × Decline Crunch', '3 × Plank', '10 min Treadmill'],
-                      'Core, Cardio',
-                    ),
-                    _buildTemplateItem(
-                      context,
-                      'Full Body',
-                      'Last: 2 weeks ago',
-                      Icons.accessibility,
-                      ['3 × Deadlift', '3 × Bench Press', '3 × Squats'],
-                      'Full Body',
-                    ),
-                  ],
-                ),
-              ),
-
-              // Bottom Actions
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          // Show empty workout dialog
-                          _showDialogWorkout(context);
-                        },
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Start Empty'),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildTemplateItem(
-  BuildContext context,
-  String title,
-  String lastPerformed,
-  IconData icon,
-  List<String> exercises,
-  String muscleGroups,
-) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Colors.grey.shade50,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey.shade200),
-    ),
-    child: InkWell(
-      onTap: () {
-        Navigator.of(context).pop();
-        // Handle template selection
-        _startWorkoutFromTemplate(context, title);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 20, color: Colors.blue.shade600),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        lastPerformed,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.more_vert, color: Colors.grey.shade400, size: 20),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              muscleGroups,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.blue.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ...exercises
-                .take(3)
-                .map(
-                  (exercise) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            exercise,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            if (exercises.length > 3)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '+${exercises.length - 3} more exercises',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-void _startWorkoutFromTemplate(BuildContext context, String templateName) {
-  // Handle starting workout from selected template
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Start $templateName'),
-      content: const Text('Starting workout from template...'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
-
-_showWorkoutTemplateDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Day 3',
+                    Text(
+                      template
+                          .name, // This should dynamically show the template name
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -819,7 +514,7 @@ _showWorkoutTemplateDialog(BuildContext context) {
                 child: Row(
                   children: [
                     Text(
-                      'Last Performed: Yesterday',
+                      'Last Performed: Yesterday', // This should dynamically show the last workout date
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -831,47 +526,17 @@ _showWorkoutTemplateDialog(BuildContext context) {
 
               const SizedBox(height: 16),
 
-              // Exercise List
+              // Exercise List (This should be populated by the template's exercises)
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _buildExerciseItem(
-                      Icons.fitness_center,
-                      '4 × Incline Bench Press (Barbell)',
-                      'Chest',
-                    ),
-                    _buildExerciseItem(
-                      Icons.sports_gymnastics,
-                      '4 × Bent Over Row (Barbell)',
-                      'Back',
-                    ),
-                    _buildExerciseItem(
-                      Icons.accessibility_new,
-                      '4 × Cable Crossover',
-                      'Chest',
-                    ),
-                    _buildExerciseItem(
-                      Icons.sports_martial_arts,
-                      '4 × Lat Pulldown (Cable)',
-                      'Back',
-                    ),
-                    _buildExerciseItem(
-                      Icons.sports_handball,
-                      '4 × Skullcrusher (Barbell)',
-                      'Arms',
-                    ),
-                    _buildExerciseItem(
-                      Icons.sports_kabaddi,
-                      '4 × Decline Crunch',
-                      'Core',
-                    ),
-                    _buildExerciseItem(
-                      Icons.sports_mma,
-                      '3 × Lateral Raise (Cable)',
-                      'Shoulders',
-                    ),
-                  ],
+                child: ListView.builder(
+                  itemCount: template.exercises.length,
+                  itemBuilder: (context, index) {
+                    return _buildExerciseItem(
+                      template.exercises[index].image,
+                      template.exercises[index].name,
+                      template.exercises[index].category,
+                    );
+                  },
                 ),
               ),
 
@@ -921,78 +586,94 @@ _showWorkoutTemplateDialog(BuildContext context) {
 }
 
 Widget _buildExerciseItem(
-  IconData icon,
+  String image,
   String exerciseName,
   String muscleGroup,
 ) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    child: Row(
-      children: [
-        // Exercise Icon
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
+  print(image);
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          // Exercise Icon
+          Container(
+            margin: EdgeInsets.only(bottom: 5.0),
+            child: image != ""
+                ? Image.asset(image, width: 60, height: 60)
+                : Icon(Icons.fitness_center_outlined),
           ),
-          child: Icon(icon, size: 24, color: Colors.grey.shade700),
-        ),
-
-        const SizedBox(width: 16),
-
-        // Exercise Details
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                exerciseName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+    
+          const SizedBox(width: 16),
+    
+          // Exercise Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exerciseName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                muscleGroup,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  muscleGroup,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
           ),
-        ),
-
-        // Info Button
-        Container(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            Icons.help_outline,
-            size: 20,
-            color: Colors.blue.shade400,
+    
+          // Info Button
+          Container(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              Icons.help_outline,
+              size: 20,
+              color: Colors.blue.shade400,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
 
-// void _startWorkout(BuildContext context) {
-//   // Handle starting the workout
-//   showDialog(
-//     context: context,
-//     builder: (context) => AlertDialog(
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       title: const Text('Workout Started'),
-//       content: const Text('Your Day 3 workout has been started successfully!'),
-//       actions: [
-//         TextButton(
-//           onPressed: () => Navigator.of(context).pop(),
-//           child: const Text('Continue'),
-//         ),
-//       ],
-//     ),
-//   );
-// }
+_deleteDialog(context, template) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Delete Template?'),
+        content: Text(
+          'Are you sure you want to delete "${template.name}"? This action cannot be undone.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Dismiss the dialog
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              WorkoutTemplateManager().deleteTemplate(template.id);
+              Navigator.of(context).pop(); // Dismiss the dialog after deletion
+              // You might want to show a SnackBar or other confirmation here
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red, // Highlight delete action
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      );
+    },
+  );
+}

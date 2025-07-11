@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:fitness_kingdom/models/workout_model.dart';
-import 'package:fitness_kingdom/navigations/app_navigation.dart';
 import 'package:fitness_kingdom/screens/home_screens/home_screen_content.dart';
 import 'package:fitness_kingdom/screens/workout_screens/workout_screen.dart';
 import 'package:fitness_kingdom/shared/app_nav_bar.dart';

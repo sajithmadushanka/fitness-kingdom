@@ -1,9 +1,20 @@
+import 'package:fitness_kingdom/data/exercises.dart';
+import 'package:fitness_kingdom/data/workout_template_manager.dart';
+import 'package:fitness_kingdom/models/exercise.dart';
+import 'package:fitness_kingdom/models/workout_template.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class SaveButton extends StatefulWidget {
   final bool isAddedExercise;
-
-  const SaveButton({super.key, required this.isAddedExercise});
+  final List<ExerciseModel> exerciseModelList;
+  final String templateName;
+  const SaveButton({
+    super.key,
+    required this.isAddedExercise,
+    required this.exerciseModelList,
+    required this.templateName,
+  });
 
   @override
   State<SaveButton> createState() => _SaveButtonState();
@@ -28,11 +39,25 @@ class _SaveButtonState extends State<SaveButton>
     ).chain(CurveTween(curve: Curves.elasticIn)).animate(_controller);
   }
 
-  void _onTap() {
+  void _onTap() async {
     if (widget.isAddedExercise) {
-      Navigator.of(context).pop(); // Or your actual save logic
+      WorkoutTemplate newWorkoutTemplate = WorkoutTemplate(
+        id: Uuid().v4(),
+        name: widget.templateName,
+        exercises: widget.exerciseModelList,
+        creationDate: DateTime.now(),
+      );
+
+      await WorkoutTemplateManager().saveWorkoutTemplate(newWorkoutTemplate);
+
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop(); // Optionally close the dialog/screen
+        // print("done");
+
+      
+      }
     } else {
-      // Trigger "dance"
       _controller.forward().then((_) => _controller.reverse());
     }
   }

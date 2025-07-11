@@ -32,7 +32,7 @@
   },
   "exercises": {
     "dumbbell_bench_press": {
-      "id": 1,
+      "id": "1",
       "name": "Dumbbell Bench Press",
       "category": "Chest",
       "image": "assets/images/dumbell-bench-press.webp",
@@ -44,7 +44,7 @@
       ]
     },
     "cable_one_arm_row": {
-      "id": 2,
+      "id": "2",
       "name": "Cable One Arm Row",
       "category": "Back",
       "image": "",
@@ -57,7 +57,7 @@
       ]
     },
     "overhead_dumbbell_press": {
-      "id": 3,
+      "id": "3",
       "name": "Overhead Dumbbell Press",
       "category": "Shoulders",
       "image": "assets/images/dumbell-sholder-press.webp",
@@ -70,7 +70,7 @@
       ]
     },
     "lat_pull_down": {
-      "id": 4,
+      "id": "4",
       "name": "Lat Pull Down",
       "category": "Back",
       "image": "assets/images/lat-pull-down.webp",
@@ -83,7 +83,7 @@
       ]
     },
     "ez_bar_barbell_curl": {
-      "id": 5,
+      "id": "5",
       "name": "EZ Bar Barbell Curl",
       "category": "Biceps",
       "image": "",
@@ -96,7 +96,7 @@
       ]
     },
     "hanging_leg_raises": {
-      "id": 6,
+      "id": "6",
       "name": "Hanging Leg Raises",
       "category": "Abs",
       "image": "assets/images/hanging-leg-raises.webp",
@@ -109,7 +109,7 @@
       ]
     },
     "barbell_squat": {
-      "id": 7,
+      "id": "7",
       "name": "Barbell Squat",
       "category": "Legs",
       "image": "",
@@ -122,7 +122,7 @@
       ]
     },
     "leg_extension": {
-      "id": 8,
+      "id": "8",
       "name": "Leg Extension",
       "category": "Legs",
       "image": "",
@@ -135,7 +135,7 @@
       ]
     },
     "leg_curl": {
-      "id": 9,
+      "id": "9",
       "name": "Leg Curl",
       "category": "Legs",
       "image": "",
@@ -148,7 +148,7 @@
       ]
     },
     "calf_raises": {
-      "id": 10,
+      "id": "10",
       "name": "Calf Raises",
       "category": "Legs",
       "image": "",
@@ -161,7 +161,7 @@
       ]
     },
     "cable_lateral_raise": {
-      "id": 11,
+      "id": "11",
       "name": "Cable Lateral Raise",
       "category": "Shoulders",
       "image": "",
@@ -174,7 +174,7 @@
       ]
     },
     "dumbbell_shrugs": {
-      "id": 12,
+      "id": "12",
       "name": "Dumbbell Shrugs",
       "category": "Shoulders",
       "image": "",
@@ -187,7 +187,7 @@
       ]
     },
     "barbell_incline_bench_press": {
-      "id": 13,
+      "id": "13",
       "name": "Barbell Incline Bench Press",
       "category": "Chest",
       "image": "assets/images/incline-dumbell-press.webp",
@@ -199,7 +199,7 @@
       ]
     },
     "barbell_row": {
-      "id": 14,
+      "id": "14",
       "name": "Barbell Row",
       "category": "Back",
       "image": "",
@@ -212,7 +212,7 @@
       ]
     },
     "cable_cross_over_lower": {
-      "id": 15,
+      "id": "15",
       "name": "Cable Cross Over (Lower)",
       "category": "Chest",
       "image": "",
@@ -225,7 +225,7 @@
       ]
     },
     "skull_crusher": {
-      "id": 16,
+      "id": "16",
       "name": "Skull Crusher",
       "category": "Triceps",
       "image": "",
@@ -237,7 +237,7 @@
       ]
     },
     "ab_crunch": {
-      "id": 17,
+      "id": "17",
       "name": "Ab Crunch",
       "category": "Abs",
       "image": "",
@@ -250,7 +250,7 @@
       ]
     },
     "leg_press": {
-      "id": 18,
+      "id": "18",
       "name": "Leg Press",
       "category": "Legs",
       "image": "",
@@ -262,7 +262,7 @@
       ]
     },
     "cable_face_pull": {
-      "id": 19,
+      "id": "19",
       "name": "Cable Face Pull",
       "category": "Shoulders",
       "image": "",
@@ -275,7 +275,7 @@
       ]
     },
     "dumbbell_lateral_raise": {
-      "id": 20,
+      "id": "20",
       "name": "Dumbbell Lateral Raise",
       "category": "Shoulders",
       "image": "",

@@ -1,46 +1,65 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:fitness_kingdom/models/workout_model.dart';
-import 'package:fitness_kingdom/screens/workout_screens/workout_tranning_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/exercise.dart';
+import '../../models/exercise.dart'; // Make sure this path is correct
+
+// Ensure this function is globally available or in a utility file
+Future<Map<String, ExerciseModel>> loadExercises(BuildContext context) async {
+  final locale = context.locale;
+  final String langCode = '${locale.languageCode}-${locale.countryCode}';
+
+  final String jsonString = await rootBundle.loadString(
+    'assets/langs/$langCode.json',
+  );
+  final Map<String, dynamic> jsonData = json.decode(jsonString);
+
+  final Map<String, dynamic> exercisesData = jsonData['exercises'];
+
+  return exercisesData.map(
+    (key, value) => MapEntry(key, ExerciseModel.fromJson(value)),
+  );
+}
 
 class WorkoutTemplateDialog extends StatefulWidget {
-  const WorkoutTemplateDialog({super.key});
+  final Set<String> initialSelectedExerciseKeys;
+
+  const WorkoutTemplateDialog({
+    super.key,
+    this.initialSelectedExerciseKeys = const {},
+  });
 
   @override
+  // ignore: library_private_types_in_public_api
   _WorkoutTemplateDialogState createState() => _WorkoutTemplateDialogState();
 }
 
 class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
   String searchQuery = "";
-  Set<String> selectedExercises = {};
+  late Set<String>
+  selectedExercises; // Changed to late and initialized in initState
   late Future<Map<String, ExerciseModel>> exercisesFuture;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    exercisesFuture = loadExercises(context);
+  void initState() {
+    super.initState();
+    selectedExercises = Set<String>.from(widget.initialSelectedExerciseKeys);
+    // exercisesFuture = loadExercises(context);
   }
 
-  Future<Map<String, ExerciseModel>> loadExercises(BuildContext context) async {
-    final locale = context.locale;
-    final String langCode = '${locale.languageCode}-${locale.countryCode}';
-
-    final String jsonString = await rootBundle.loadString(
-      'assets/langs/$langCode.json',
-    );
-    final Map<String, dynamic> jsonData = json.decode(jsonString);
-
-    final Map<String, dynamic> exercisesData = jsonData['exercises'];
-
-    return exercisesData.map(
-      (key, value) => MapEntry(key, ExerciseModel.fromJson(value)),
-    );
+  @override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  // Initialize exercisesFuture here, after initState and when context is fully available
+  // This ensures context.locale is safe to access.
+  // The `!mounted` check is a good practice to prevent calling setState after the widget is disposed.
+  // The `exercisesFuture == null` check ensures it's only loaded once initially.
+  if (!mounted) {
+    return;
   }
-
+  exercisesFuture = loadExercises(context);
+}
   void toggleExerciseSelection(String exerciseKey) {
     setState(() {
       if (selectedExercises.contains(exerciseKey)) {
@@ -62,15 +81,15 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
 
     return exerciseEntries.where((entry) {
       final exercise = entry.value;
-      return exercise.name!.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          exercise.category!.toLowerCase().contains(searchQuery.toLowerCase());
+      return exercise.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          exercise.category.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 40),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 40),
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: SizedBox(
@@ -80,7 +99,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
           children: [
             // Header
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
               ),
@@ -93,23 +112,28 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                   ),
                   Row(
                     children: [
-                      Text(
-                        "New",
+                      const Text(
+                        "New", // Consider localizing this if it's meant to be "New Template"
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.blue,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       GestureDetector(
                         onTap: () {
+                          // Only pop with selected exercises if there are any
                           if (selectedExercises.isNotEmpty) {
                             Navigator.of(context).pop(selectedExercises);
+                          } else {
+                            Navigator.of(
+                              context,
+                            ).pop(); // Pop without selecting if empty
                           }
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
                           ),
@@ -139,7 +163,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
 
             // Search Bar
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
@@ -150,7 +174,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                     hintText: "Search",
                     prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
@@ -170,7 +194,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                 future: exercisesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
@@ -178,17 +202,17 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.error_outline,
                             size: 48,
                             color: Colors.red,
                           ),
-                          SizedBox(height: 16),
-                          Text(
+                          const SizedBox(height: 16),
+                          const Text(
                             'Error loading exercises',
                             style: TextStyle(fontSize: 16, color: Colors.red),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             '${snapshot.error}',
                             style: TextStyle(
@@ -224,7 +248,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                   }
 
                   return ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filteredExercises.length,
                     itemBuilder: (context, index) {
                       final exerciseEntry = filteredExercises[index];
@@ -234,9 +258,8 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                         exerciseKey,
                       );
 
-                      // print(exercise.image!);
                       return Container(
-                        margin: EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.only(bottom: 8),
                         child: Card(
                           margin: EdgeInsets.zero,
                           elevation: isSelected ? 4 : 2,
@@ -253,7 +276,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                             onTap: () => toggleExerciseSelection(exerciseKey),
                             borderRadius: BorderRadius.circular(12),
                             child: Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -261,19 +284,19 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                                   Row(
                                     children: [
                                       // Exercise image (if available)
-                                      if (exercise.image!.toString() != "")
+                                      if (exercise.image.isNotEmpty)
                                         Container(
                                           width: 50,
                                           height: 50,
-                                          margin: EdgeInsets.only(right: 16),
+                                          margin: const EdgeInsets.only(
+                                            right: 16,
+                                          ),
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                             image: DecorationImage(
-                                              image: AssetImage(
-                                                exercise.image!
-                                              ),
+                                              image: AssetImage(exercise.image),
                                               fit: BoxFit.cover,
                                             ),
                                           ),
@@ -282,7 +305,9 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                                         Container(
                                           width: 50,
                                           height: 50,
-                                          margin: EdgeInsets.only(right: 16),
+                                          margin: const EdgeInsets.only(
+                                            right: 16,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: Colors.grey[200],
                                             borderRadius: BorderRadius.circular(
@@ -303,16 +328,16 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              exercise.name!,
-                                              style: TextStyle(
+                                              exercise.name,
+                                              style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.black87,
                                               ),
                                             ),
-                                            SizedBox(height: 4),
+                                            const SizedBox(height: 4),
                                             Text(
-                                              exercise.category!,
+                                              exercise.category,
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.grey[600],
@@ -341,7 +366,7 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                                           ),
                                         ),
                                         child: isSelected
-                                            ? Icon(
+                                            ? const Icon(
                                                 Icons.check,
                                                 color: Colors.white,
                                                 size: 16,
@@ -350,40 +375,6 @@ class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
                                       ),
                                     ],
                                   ),
-
-                                  // Instructions
-                                  // if (exercise.instructions!.isNotEmpty) ...[
-                                  //   SizedBox(height: 12),
-                                  //   Text(
-                                  //     "Instructions:",
-                                  //     style: TextStyle(
-                                  //       fontSize: 14,
-                                  //       fontWeight: FontWeight.w600,
-                                  //       color: Colors.black87,
-                                  //     ),
-                                  //   ),
-                                  //   SizedBox(height: 8),
-                                  //   ...exercise.instructions!
-                                  //       .asMap()
-                                  //       .entries
-                                  //       .map((entry) {
-                                  //         final stepIndex = entry.key + 1;
-                                  //         final instruction = entry.value;
-                                  //         print(stepIndex);
-                                  //         print(instruction);
-                                  //         return Padding(
-                                  //           padding: EdgeInsets.only(bottom: 4),
-                                  //           child: Text(
-                                  //             "$stepIndex. $instruction",
-                                  //             style: TextStyle(
-                                  //               fontSize: 13,
-                                  //               color: Colors.grey[700],
-                                  //               height: 1.4,
-                                  //             ),
-                                  //           ),
-                                  //         );
-                                  //       }),
-                                  // ],
                                 ],
                               ),
                             ),

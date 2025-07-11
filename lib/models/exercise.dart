@@ -1,33 +1,55 @@
+import 'package:hive/hive.dart';
+import 'package:easy_localization/easy_localization.dart'; // Ensure this is imported if used in ExerciseModel
+
+part 'exercise.g.dart'; // This line will be generated
+
+@HiveType(typeId: 0) // Unique typeId for this model
 class ExerciseModel {
-  final int? id;
-  final String? name;
-  final String? category;
-  final String? image;
-  final List<String>? instructions;
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String name;
+  @HiveField(2)
+  final String category;
+  @HiveField(3)
+  final String image;
+  @HiveField(4)
+  final List<String> instructions;
 
   ExerciseModel({
-    this.id,
-    this.name,
-    this.category,
-    this.image,
-    this.instructions,
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.image,
+    required this.instructions,
   });
 
   factory ExerciseModel.fromJson(Map<String, dynamic> json) {
     return ExerciseModel(
-      id: json['id'],
-      name: json['name'],
-      category: json['category'],
-      image: json['image'],
-      instructions: json['instructions'] != null
-          ? List<String>.from(json['instructions'])
-          : [],
+      id: json['id'] as String,
+      name: json['name'] as String,
+      category: json['category'] as String,
+      image: json['image'] as String,
+      instructions: List<String>.from(json['instructions'] as List),
     );
   }
 
-  @override
-String toString() {
-  return 'ExerciseModel(id: $id, name: $name, category: $category, image: $image, instructions: $instructions)';
-}
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'category': category,
+      'image': image,
+      'instructions': instructions,
+    };
+  }
 
+  // Override hashCode and equals for proper Set behavior
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExerciseModel && runtimeType == other.runtimeType && id == other.id;
 }
