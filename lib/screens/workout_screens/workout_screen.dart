@@ -493,7 +493,17 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Handle edit action
+                        // close the dialog
+                        Navigator.pop(context);
+                        // navigate to edit screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return NewTemplateScreen(template: template);
+                            },
+                          ),
+                        );
                       },
                       child: const Text(
                         'Edit',
@@ -554,7 +564,8 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const WorkoutTrackingScreen(),
+                          builder: (context) =>
+                              WorkoutTrackingScreen(workoutTemplate: template),
                         ),
                       );
                     },
@@ -604,9 +615,9 @@ Widget _buildExerciseItem(
                 ? Image.asset(image, width: 60, height: 60)
                 : Icon(Icons.fitness_center_outlined),
           ),
-    
+
           const SizedBox(width: 16),
-    
+
           // Exercise Details
           Expanded(
             child: Column(
@@ -628,7 +639,7 @@ Widget _buildExerciseItem(
               ],
             ),
           ),
-    
+
           // Info Button
           Container(
             padding: const EdgeInsets.all(8),

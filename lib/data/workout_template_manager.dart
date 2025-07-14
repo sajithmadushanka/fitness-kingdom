@@ -40,8 +40,18 @@ class WorkoutTemplateManager {
 await Hive.openBox<WorkoutTemplate>('workoutTemplatesBox'); // Reopen correctly
 }
 
+ // --- NEW METHOD TO ADD ---
+  void setInitialSelection(Set<String> initialKeys, Map<String, ExerciseModel> allExercises) {
+    final List<ExerciseModel> initialSelection = [];
+    for (String key in initialKeys) {
+      if (allExercises.containsKey(key)) {
+        initialSelection.add(allExercises[key]!);
+      }
+    }
+    selectedExercisesNotifier.value = initialSelection;
+  }
 
-Future<void> saveWorkoutTemplate(WorkoutTemplate template) async {
+Future<void> saveOrUpdateWorkoutTemplate(WorkoutTemplate template) async {
   final box = Hive.box<WorkoutTemplate>('workoutTemplatesBox');
   await box.put(template.id, template);
   print("template save success ${template.id}");

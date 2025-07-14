@@ -1,36 +1,142 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+import 'package:fitness_kingdom/models/workout_template.dart';
+import 'package:fitness_kingdom/models/exercise.dart';
+import 'package:fitness_kingdom/models/workout_history.dart';
+import 'package:fitness_kingdom/models/workout_exercise_data.dart';
+import 'package:fitness_kingdom/models/workout_set_data.dart';
+import 'package:fitness_kingdom/data/workout_history_manager.dart';
+
+// Local class to hold the mutable state of an exercise during tracking
+class TrackedExercise {
+  final String id; // Corresponds to ExerciseModel.id
+  final String name; // Corresponds to ExerciseModel.name
+  List<TrackedSet> sets; // List of sets being performed
+
+  TrackedExercise({
+    required this.id,
+    required this.name,
+    required this.sets,
+  });
+}
+
+// Local class to hold the mutable state of a set during tracking
+class TrackedSet {
+  double weight;
+  int reps;
+  double? previousWeight; // Stored previous weight
+  int? previousReps; // Stored previous reps
+  bool isCompleted;
+
+  // TextEditingControllers for the input fields
+  final TextEditingController weightController;
+  final TextEditingController repsController;
+
+  TrackedSet({
+    this.weight = 0.0,
+    this.reps = 0,
+    this.previousWeight,
+    this.previousReps,
+    this.isCompleted = false,
+  }) :  weightController = TextEditingController(text: weight == 0.0 ? '' : weight.toStringAsFixed(0)), // Start with empty string if 0
+        repsController = TextEditingController(text: reps == 0 ? '' : reps.toString()); // Start with empty string if 0
+
+  // Dispose controllers
+  void dispose() {
+    weightController.dispose();
+    repsController.dispose();
+  }
+}
+
 
 class WorkoutTrackingScreen extends StatefulWidget {
-  const WorkoutTrackingScreen({super.key});
+  final WorkoutTemplate workoutTemplate;
+  const WorkoutTrackingScreen({super.key, required this.workoutTemplate});
 
   @override
   State<WorkoutTrackingScreen> createState() => _WorkoutTrackingScreenState();
 }
 
 class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
-  bool isMinimized = false;
-  int workoutDuration = 4; // in minutes
-  
-  List<Exercise> exercises = [
-    Exercise(
-      name: 'Incline Bench Press (Barbell)',
-      sets: [
-        WorkoutSet(weight: 10, reps: 10, previous: '10 kg × 10'),
-        WorkoutSet(weight: 15, reps: 10, previous: '15 kg × 10'),
-        WorkoutSet(weight: 15, reps: 6, previous: '15 kg × 6'),
-        WorkoutSet(weight: 15, reps: 7, previous: '15 kg × 7'),
-      ],
-    ),
-    Exercise(
-      name: 'Bent Over Row (Barbell)',
-      sets: [
-        WorkoutSet(weight: 10, reps: 12, previous: '10 kg × 12'),
-        WorkoutSet(weight: 10, reps: 12, previous: '10 kg × 12'),
-        WorkoutSet(weight: 10, reps: 12, previous: '10 kg × 12'),
-        WorkoutSet(weight: 15, reps: 8, previous: '15 kg × 8'),
-      ],
-    ),
-  ];
+  late List<TrackedExercise> currentWorkoutExercises;
+  late final WorkoutHistoryManager _workoutHistoryManager;
+
+  late Timer _timer;
+  Duration _workoutDuration = Duration.zero;
+  // bool _isWorkoutActive = false; // Not strictly needed as timer presence implies active
+
+  @override
+  void initState() {
+    super.initState();
+    _workoutHistoryManager = WorkoutHistoryManager();
+    _initializeWorkoutExercises();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Stop the timer
+    // Dispose all TextEditingControllers
+    for (var exercise in currentWorkoutExercises) {
+      for (var set in exercise.sets) {
+        set.dispose();
+      }
+    }
+    super.dispose();
+  }
+
+  void _initializeWorkoutExercises() {
+    currentWorkoutExercises = [];
+    for (var exerciseTemplate in widget.workoutTemplate.exercises) {
+      final List<WorkoutSetData> previousSets =
+          _workoutHistoryManager.getLastPerformedSetsForExercise(exerciseTemplate.id);
+
+      List<TrackedSet> initialSets = [];
+      if (previousSets.isNotEmpty) {
+        // If there's previous history, populate with those sets
+        for (var ps in previousSets) {
+          initialSets.add(TrackedSet(
+            previousWeight: ps.weight,
+            previousReps: ps.reps,
+            // Keep current weight/reps as 0 initially
+          ));
+        }
+      } else {
+        // If no previous history, start with one empty set
+        initialSets.add(TrackedSet());
+      }
+
+      currentWorkoutExercises.add(
+        TrackedExercise(
+          id: exerciseTemplate.id,
+          name: exerciseTemplate.name,
+          sets: initialSets,
+        ),
+      );
+    }
+  }
+
+  void _startTimer() {
+    // _isWorkoutActive = true; // No longer needed
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _workoutDuration += const Duration(seconds: 1);
+      });
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,27 +157,32 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                 ),
               ),
             ),
-            
+
             // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back Button
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.refresh,
-                      size: 20,
-                      color: Colors.black54,
+                  // Back Button (or Reset workout)
+                  GestureDetector(
+                    onTap: () {
+                      _showResetDialog(context); // Show dialog before resetting
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.refresh,
+                        size: 20,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
-                  
+
                   // Finish Button
                   ElevatedButton(
                     onPressed: () {
@@ -97,7 +208,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                 ],
               ),
             ),
-            
+
             // Workout Title and Timer
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -106,15 +217,19 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text(
-                        'Day 3',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                      Expanded(
+                        child: Text(
+                          widget.workoutTemplate.name, // Display workout template name
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // More options button for workout (not implemented yet)
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -131,7 +246,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '0:0$workoutDuration',
+                    _formatDuration(_workoutDuration), // Display live timer
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -140,7 +255,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Notes',
+                    'Notes', // This could be dynamic from template notes if you add them
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade400,
@@ -149,20 +264,20 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Exercise List
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: exercises.length,
+                itemCount: currentWorkoutExercises.length,
                 itemBuilder: (context, index) {
-                  return _buildExerciseCard(exercises[index], index);
+                  return _buildExerciseCard(currentWorkoutExercises[index], index);
                 },
               ),
             ),
-            
+
             // Bottom Actions
             Container(
               padding: const EdgeInsets.all(20),
@@ -171,6 +286,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
+                        // TODO: Implement actual Add Exercise logic
                         _showAddExerciseDialog(context);
                       },
                       style: OutlinedButton.styleFrom(
@@ -222,7 +338,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
     );
   }
 
-  Widget _buildExerciseCard(Exercise exercise, int exerciseIndex) {
+  Widget _buildExerciseCard(TrackedExercise exercise, int exerciseIndex) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -247,6 +363,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
                 size: 20,
               ),
               const SizedBox(width: 8),
+              // More options for individual exercise (not implemented yet)
               const Icon(
                 Icons.more_horiz,
                 color: Colors.grey,
@@ -254,9 +371,9 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Sets Header
           Row(
             children: [
@@ -269,16 +386,16 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
               const SizedBox(width: 40),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Sets List
           ...exercise.sets.asMap().entries.map((entry) {
             int setIndex = entry.key;
-            WorkoutSet set = entry.value;
+            TrackedSet set = entry.value;
             return _buildSetRow(exerciseIndex, setIndex, set);
           }).toList(),
-          
+
           // Add Set Button
           Container(
             margin: const EdgeInsets.only(top: 12),
@@ -286,8 +403,12 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
             child: OutlinedButton(
               onPressed: () {
                 setState(() {
-                  exercises[exerciseIndex].sets.add(
-                    WorkoutSet(weight: 0, reps: 0, previous: '- kg × -'),
+                  // Add a new empty set, carrying over the previous best values if available
+                  currentWorkoutExercises[exerciseIndex].sets.add(
+                    TrackedSet(
+                      previousWeight: exercise.sets.isNotEmpty ? exercise.sets.last.previousWeight : null,
+                      previousReps: exercise.sets.isNotEmpty ? exercise.sets.last.previousReps : null,
+                    ),
                   );
                 });
               },
@@ -313,7 +434,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
     );
   }
 
-  Widget _buildSetRow(int exerciseIndex, int setIndex, WorkoutSet set) {
+  Widget _buildSetRow(int exerciseIndex, int setIndex, TrackedSet set) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -336,20 +457,22 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
-          // Previous
+
+          // Previous (Weight x Reps from History)
           Expanded(
             child: Text(
-              set.previous,
+              set.previousWeight != null && set.previousReps != null
+                  ? '${set.previousWeight!.toStringAsFixed(0)}kg x ${set.previousReps}'
+                  : '-',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
               ),
             ),
           ),
-          
+
           // Weight Input
           Container(
             width: 60,
@@ -360,32 +483,29 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: TextField(
+              controller: set.weightController,
               textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true), // Allow decimals
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                hintText: set.previousWeight != null ? set.previousWeight!.toStringAsFixed(0) : '', // Hint
               ),
               onChanged: (value) {
-                setState(() {
-                  exercises[exerciseIndex].sets[setIndex] = WorkoutSet(
-                    weight: int.tryParse(value) ?? 0,
-                    reps: set.reps,
-                    previous: set.previous,
-                    isCompleted: set.isCompleted,
-                  );
-                });
+                // Update the model and controller
+                set.weight = double.tryParse(value) ?? 0.0;
+                // No setState here, as controller update handles it, and we might not need immediate UI refresh for every char
+                // The main setState will happen when the checkbox is toggled or a set is added/removed.
               },
-              controller: TextEditingController(text: set.weight.toString()),
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Reps Input
           Container(
             width: 60,
@@ -396,42 +516,46 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: TextField(
+              controller: set.repsController,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                hintText: set.previousReps != null ? set.previousReps!.toString() : '', // Hint
               ),
               onChanged: (value) {
-                setState(() {
-                  exercises[exerciseIndex].sets[setIndex] = WorkoutSet(
-                    weight: set.weight,
-                    reps: int.tryParse(value) ?? 0,
-                    previous: set.previous,
-                    isCompleted: set.isCompleted,
-                  );
-                });
+                // Update the model and controller
+                set.reps = int.tryParse(value) ?? 0;
               },
-              controller: TextEditingController(text: set.reps.toString()),
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
-          // Check Button
+
+          // Check Button (Toggle completion and populate if previous exists)
           GestureDetector(
             onTap: () {
               setState(() {
-                exercises[exerciseIndex].sets[setIndex] = WorkoutSet(
-                  weight: set.weight,
-                  reps: set.reps,
-                  previous: set.previous,
-                  isCompleted: !set.isCompleted,
-                );
+                set.isCompleted = !set.isCompleted;
+                if (set.isCompleted && set.previousWeight != null && set.previousReps != null) {
+                  // If checkbox is toggled ON and previous data exists,
+                  // populate the current weight/reps with previous values
+                  set.weight = set.previousWeight!;
+                  set.reps = set.previousReps!;
+                  set.weightController.text = set.weight.toStringAsFixed(0);
+                  set.repsController.text = set.reps.toString();
+                } else if (!set.isCompleted) {
+                  // If checkbox is toggled OFF, clear the inputs (or reset to 0)
+                  set.weight = 0.0;
+                  set.reps = 0;
+                  set.weightController.text = ''; // Clear text
+                  set.repsController.text = ''; // Clear text
+                }
               });
             },
             child: Container(
@@ -465,9 +589,80 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+
+              // Stop the timer
+              _timer.cancel();
+              // _isWorkoutActive = false; // Not strictly needed
+
+              // Prepare data for WorkoutHistory
+              List<WorkoutExerciseData> exercisesToSave = [];
+              for (var trackedExercise in currentWorkoutExercises) {
+                List<WorkoutSetData> setsToSave = [];
+                for (var trackedSet in trackedExercise.sets) {
+                  // Only save sets that were marked as completed AND have data entered
+                  if (trackedSet.isCompleted && (trackedSet.weight > 0 || trackedSet.reps > 0)) {
+                    setsToSave.add(
+                      WorkoutSetData(
+                        weight: trackedSet.weight,
+                        reps: trackedSet.reps,
+                        isCompleted: trackedSet.isCompleted,
+                      ),
+                    );
+                  }
+                }
+                // Only add exercises that have at least one valid completed set to save
+                if (setsToSave.isNotEmpty) {
+                  exercisesToSave.add(
+                    WorkoutExerciseData(
+                      exerciseId: trackedExercise.id,
+                      exerciseName: trackedExercise.name,
+                      sets: setsToSave,
+                    ),
+                  );
+                }
+              }
+
+              // Create WorkoutHistory object
+              if (exercisesToSave.isNotEmpty) {
+                WorkoutHistory newHistory = WorkoutHistory(
+                  id: const Uuid().v4(),
+                  templateId: widget.workoutTemplate.id,
+                  templateName: widget.workoutTemplate.name,
+                  workoutDate: DateTime.now(),
+                  durationInMinutes: _workoutDuration.inMinutes,
+                  exercisesPerformed: exercisesToSave,
+                );
+
+                // Save to Hive
+                try {
+                  await _workoutHistoryManager.addWorkoutHistory(newHistory);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Workout saved to history!')),
+                    );
+                  }
+                } catch (e) {
+                  print('Error saving workout history: $e');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to save workout: ${e.toString()}')),
+                    );
+                  }
+                }
+              } else {
+                 if (context.mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(content: Text('No completed sets to save.')),
+                   );
+                 }
+              }
+
+              // Pop the WorkoutTrackingScreen
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             child: const Text('Finish'),
           ),
@@ -489,11 +684,47 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(context); // Close dialog
+              _timer.cancel(); // Stop timer
+              if (context.mounted) {
+                Navigator.pop(context); // Pop WorkoutTrackingScreen
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Cancel Workout'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Workout'),
+        content: const Text('Are you sure you want to reset all current progress in this workout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              setState(() {
+                _initializeWorkoutExercises(); // Re-initialize all exercises to their fresh state
+                _workoutDuration = Duration.zero; // Reset timer
+                _timer.cancel(); // Cancel old timer
+                _startTimer(); // Start new timer
+              });
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Workout progress reset.')),
+                );
+              }
+            },
+            child: const Text('Reset'),
           ),
         ],
       ),
@@ -505,7 +736,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Exercise'),
-        content: const Text('Select an exercise to add to your workout.'),
+        content: const Text('Implement logic to select and add more exercises here.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -513,34 +744,22 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
           ),
           ElevatedButton(
             onPressed: () {
+              // Example: Adding a hardcoded new exercise for demonstration
+              setState(() {
+                currentWorkoutExercises.add(
+                  TrackedExercise(
+                    id: const Uuid().v4(), // Give a unique ID for this session
+                    name: 'New Custom Exercise',
+                    sets: [TrackedSet()], // Start with one empty set
+                  ),
+                );
+              });
               Navigator.pop(context);
-              // Add new exercise logic here
             },
-            child: const Text('Add'),
+            child: const Text('Add Dummy Exercise'),
           ),
         ],
       ),
     );
   }
-}
-
-class Exercise {
-  final String name;
-  final List<WorkoutSet> sets;
-
-  Exercise({required this.name, required this.sets});
-}
-
-class WorkoutSet {
-  final int weight;
-  final int reps;
-  final String previous;
-  final bool isCompleted;
-
-  WorkoutSet({
-    required this.weight,
-    required this.reps,
-    required this.previous,
-    this.isCompleted = false,
-  });
 }

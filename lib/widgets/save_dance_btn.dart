@@ -9,11 +9,14 @@ class SaveButton extends StatefulWidget {
   final bool isAddedExercise;
   final List<ExerciseModel> exerciseModelList;
   final String templateName;
+  final String? templateId;
   const SaveButton({
     super.key,
     required this.isAddedExercise,
     required this.exerciseModelList,
     required this.templateName,
+     this.templateId,
+    
   });
 
   @override
@@ -42,20 +45,18 @@ class _SaveButtonState extends State<SaveButton>
   void _onTap() async {
     if (widget.isAddedExercise) {
       WorkoutTemplate newWorkoutTemplate = WorkoutTemplate(
-        id: Uuid().v4(),
+        id:widget.templateId ?? Uuid().v4(),
         name: widget.templateName,
         exercises: widget.exerciseModelList,
         creationDate: DateTime.now(),
       );
 
-      await WorkoutTemplateManager().saveWorkoutTemplate(newWorkoutTemplate);
+      await WorkoutTemplateManager().saveOrUpdateWorkoutTemplate(newWorkoutTemplate);
 
       if (context.mounted) {
         // ignore: use_build_context_synchronously
         Navigator.of(context).pop(); // Optionally close the dialog/screen
         // print("done");
-
-      
       }
     } else {
       _controller.forward().then((_) => _controller.reverse());
@@ -81,7 +82,10 @@ class _SaveButtonState extends State<SaveButton>
             ),
             padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          onPressed: _onTap,
+          onPressed: () {
+          
+            _onTap(); // Only call _onTap() if templateName is not empty
+          },
           child: Text(
             'Save',
             style: TextStyle(

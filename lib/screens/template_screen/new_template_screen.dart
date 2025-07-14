@@ -1,19 +1,22 @@
 import 'package:fitness_kingdom/data/load_exercise.dart';
-import 'package:fitness_kingdom/dialogs/workout_temp_dialog.dart' hide loadExercises;
+import 'package:fitness_kingdom/dialogs/workout_temp_dialog.dart'
+    hide loadExercises;
 import 'package:fitness_kingdom/models/exercise.dart';
+import 'package:fitness_kingdom/models/workout_template.dart';
 import 'package:fitness_kingdom/widgets/save_dance_btn.dart';
 import 'package:flutter/material.dart';
 import 'package:fitness_kingdom/data/workout_template_manager.dart'; // Import the manager
 
 class NewTemplateScreen extends StatefulWidget {
-  const NewTemplateScreen({super.key});
+  final WorkoutTemplate? template;
+  const NewTemplateScreen({super.key, this.template});
 
   @override
   State<NewTemplateScreen> createState() => _NewTemplateScreenState();
 }
 
 class _NewTemplateScreenState extends State<NewTemplateScreen> {
-  final TextEditingController _templateNameController = TextEditingController();
+  late TextEditingController _templateNameController;
   // No longer directly managing _isAddedExercise here,
   // its state will be derived from selected exercises.
   // bool _isAddedExercise = false;
@@ -23,7 +26,10 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
   @override
   void initState() {
     super.initState();
-    // No need to load anything specific here, manager handles it.
+    _templateNameController = TextEditingController(
+      text: widget.template?.name ?? '',
+    );
+    _workoutManager.selectedExercisesNotifier.value = widget.template?.exercises ?? [];
   }
 
   @override
@@ -55,7 +61,8 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
                       const SizedBox(height: 16),
                       // Listen to changes in selectedExercisesNotifier
                       ValueListenableBuilder<List<ExerciseModel>>(
-                        valueListenable: _workoutManager.selectedExercisesNotifier,
+                        valueListenable:
+                            _workoutManager.selectedExercisesNotifier,
                         builder: (context, selectedExercises, child) {
                           return _buildExerciseList(selectedExercises);
                         },
@@ -87,8 +94,12 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
           valueListenable: _workoutManager.selectedExercisesNotifier,
           builder: (context, selectedExercises, child) {
             print("el$selectedExercises");
-            return SaveButton(isAddedExercise: selectedExercises.isNotEmpty , exerciseModelList: selectedExercises,
-                templateName: _templateNameController.text,
+
+            return SaveButton(
+              isAddedExercise: selectedExercises.isNotEmpty,
+              exerciseModelList: selectedExercises,
+              templateName: _templateNameController.text,
+              templateId: widget.template?.id,
             );
           },
         ),
@@ -111,7 +122,7 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
         height: 40,
         child: TextField(
           controller: _templateNameController, // Assign controller
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Template Name',
             hintStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             prefix: SizedBox(width: 8),
@@ -135,7 +146,27 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: () => _addExercise(context),
+        onPressed: () {
+          if (_templateNameController.text == "") {
+            showDialog(
+              context: context, // You need a BuildContext here
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  content: const Text("Template name must be required"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("OK"),
+                    ),
+                  ],
+                );
+              },
+            );
+            // Important: return here to prevent _onTap() from being called
+            return;
+          }
+          _addExercise(context);
+        },
         icon: const Icon(Icons.add),
         label: const Text("Add Exercise"),
         style: OutlinedButton.styleFrom(
@@ -168,7 +199,8 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
 
     return ListView.builder(
       shrinkWrap: true, // Important for nested list views
-      physics: const NeverScrollableScrollPhysics(), // Important for nested list views
+      physics:
+          const NeverScrollableScrollPhysics(), // Important for nested list views
       itemCount: exercises.length,
       itemBuilder: (context, index) {
         final exercise = exercises[index];
@@ -221,10 +253,7 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
                       const SizedBox(height: 4),
                       Text(
                         exercise.category,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -257,7 +286,8 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
             ),
             TextButton(
               onPressed: () {
-                _workoutManager.clearAllExercises(); // Clear exercises if discarding
+                _workoutManager
+                    .clearAllExercises(); // Clear exercises if discarding
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Go back
               },
@@ -274,14 +304,17 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
       context: context,
       builder: (context) => WorkoutTemplateDialog(
         initialSelectedExerciseKeys: Set<String>.from(
-            _workoutManager.selectedExercisesNotifier.value.map((e) => e.id)),
+          _workoutManager.selectedExercisesNotifier.value.map((e) => e.id),
+        ),
       ),
     );
 
     if (selectedExerciseKeys != null && selectedExerciseKeys.isNotEmpty) {
       // Load all exercise data once to find the full ExerciseModel objects
       // ignore: use_build_context_synchronously
-      final Map<String, ExerciseModel> allExerciseData = await loadExercises(context);
+      final Map<String, ExerciseModel> allExerciseData = await loadExercises(
+        context,
+      );
 
       // Filter out exercises that are already selected and convert keys to ExerciseModel
       final List<ExerciseModel> newExercisesToAdd = [];
@@ -289,7 +322,9 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
         final exercise = allExerciseData[key];
         if (exercise != null) {
           // Check if this exercise is NOT already in our current selected list
-          if (!_workoutManager.selectedExercisesNotifier.value.any((e) => e.id == exercise.id)) {
+          if (!_workoutManager.selectedExercisesNotifier.value.any(
+            (e) => e.id == exercise.id,
+          )) {
             newExercisesToAdd.add(exercise);
           }
         }
