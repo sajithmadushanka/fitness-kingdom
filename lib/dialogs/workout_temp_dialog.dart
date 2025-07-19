@@ -37,29 +37,24 @@ class WorkoutTemplateDialog extends StatefulWidget {
 
 class _WorkoutTemplateDialogState extends State<WorkoutTemplateDialog> {
   String searchQuery = "";
-  late Set<String>
-  selectedExercises; // Changed to late and initialized in initState
+  late Set<String> selectedExercises;
   late Future<Map<String, ExerciseModel>> exercisesFuture;
 
   @override
   void initState() {
     super.initState();
     selectedExercises = Set<String>.from(widget.initialSelectedExerciseKeys);
-    // exercisesFuture = loadExercises(context);
   }
 
   @override
-void didChangeDependencies() {
-  super.didChangeDependencies();
-  // Initialize exercisesFuture here, after initState and when context is fully available
-  // This ensures context.locale is safe to access.
-  // The `!mounted` check is a good practice to prevent calling setState after the widget is disposed.
-  // The `exercisesFuture == null` check ensures it's only loaded once initially.
-  if (!mounted) {
-    return;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!mounted) {
+      return;
+    }
+    exercisesFuture = loadExercises(context);
   }
-  exercisesFuture = loadExercises(context);
-}
+
   void toggleExerciseSelection(String exerciseKey) {
     setState(() {
       if (selectedExercises.contains(exerciseKey)) {
@@ -88,10 +83,13 @@ void didChangeDependencies() {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 40),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      backgroundColor: colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 1.0,
         height: MediaQuery.of(context).size.height * 0.8,
@@ -101,25 +99,32 @@ void didChangeDependencies() {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                color: colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.close, color: Colors.grey[600]),
+                    icon: Icon(
+                      Icons.close,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Row(
                     children: [
-                      const Text(
-                        "New", // Consider localizing this if it's meant to be "New Template"
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      // Text(
+                      //   "New", // Consider localizing this if it's meant to be "New Template"
+                      //   style: theme.textTheme.titleMedium?.copyWith(
+                      //     color: colorScheme.primary,
+                      //     fontWeight: FontWeight.w600,
+                      //   ),
+                      // ),
                       const SizedBox(width: 16),
                       GestureDetector(
                         onTap: () {
@@ -127,9 +132,7 @@ void didChangeDependencies() {
                           if (selectedExercises.isNotEmpty) {
                             Navigator.of(context).pop(selectedExercises);
                           } else {
-                            Navigator.of(
-                              context,
-                            ).pop(); // Pop without selecting if empty
+                            Navigator.of(context).pop();
                           }
                         },
                         child: Container(
@@ -139,17 +142,16 @@ void didChangeDependencies() {
                           ),
                           decoration: BoxDecoration(
                             color: selectedExercises.isNotEmpty
-                                ? Colors.blue
-                                : Colors.grey[300],
+                                ? colorScheme.primary
+                                : colorScheme.outline.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             "Add (${selectedExercises.length})",
-                            style: TextStyle(
+                            style: theme.textTheme.labelLarge?.copyWith(
                               color: selectedExercises.isNotEmpty
-                                  ? Colors.white
-                                  : Colors.grey[600],
-                              fontSize: 16,
+                                  ? colorScheme.onPrimary
+                                  : colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -166,13 +168,22 @@ void didChangeDependencies() {
               padding: const EdgeInsets.all(16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
                   decoration: InputDecoration(
                     hintText: "Search",
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -194,7 +205,11 @@ void didChangeDependencies() {
                 future: exercisesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: colorScheme.primary,
+                      ),
+                    );
                   }
 
                   if (snapshot.hasError) {
@@ -202,22 +217,23 @@ void didChangeDependencies() {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.error_outline,
                             size: 48,
-                            color: Colors.red,
+                            color: colorScheme.error,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Error loading exercises',
-                            style: TextStyle(fontSize: 16, color: Colors.red),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.error,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             '${snapshot.error}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -230,7 +246,9 @@ void didChangeDependencies() {
                     return Center(
                       child: Text(
                         'No exercises found',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     );
                   }
@@ -242,7 +260,9 @@ void didChangeDependencies() {
                     return Center(
                       child: Text(
                         'No exercises match your search',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     );
                   }
@@ -263,11 +283,16 @@ void didChangeDependencies() {
                         child: Card(
                           margin: EdgeInsets.zero,
                           elevation: isSelected ? 4 : 2,
+                          color: isSelected
+                              ? colorScheme.primaryContainer.withValues(
+                                  alpha: 0.3,
+                                )
+                              : colorScheme.surface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
                               color: isSelected
-                                  ? Colors.blue
+                                  ? colorScheme.primary
                                   : Colors.transparent,
                               width: 2,
                             ),
@@ -275,6 +300,12 @@ void didChangeDependencies() {
                           child: InkWell(
                             onTap: () => toggleExerciseSelection(exerciseKey),
                             borderRadius: BorderRadius.circular(12),
+                            splashColor: colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            highlightColor: colorScheme.primary.withValues(
+                              alpha: 0.05,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(
@@ -309,14 +340,15 @@ void didChangeDependencies() {
                                             right: 16,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.grey[200],
+                                            color: colorScheme
+                                                .surfaceContainerHighest,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                           ),
                                           child: Icon(
                                             Icons.fitness_center,
-                                            color: Colors.grey[600],
+                                            color: colorScheme.onSurfaceVariant,
                                             size: 24,
                                           ),
                                         ),
@@ -329,19 +361,21 @@ void didChangeDependencies() {
                                           children: [
                                             Text(
                                               exercise.name,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    color:
+                                                        colorScheme.onSurface,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
                                               exercise.category,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey[600],
-                                              ),
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -353,22 +387,22 @@ void didChangeDependencies() {
                                         height: 24,
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? Colors.blue
+                                              ? colorScheme.primary
                                               : Colors.transparent,
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
                                           border: Border.all(
                                             color: isSelected
-                                                ? Colors.blue
-                                                : Colors.grey[400]!,
+                                                ? colorScheme.primary
+                                                : colorScheme.outline,
                                             width: 2,
                                           ),
                                         ),
                                         child: isSelected
-                                            ? const Icon(
+                                            ? Icon(
                                                 Icons.check,
-                                                color: Colors.white,
+                                                color: colorScheme.onPrimary,
                                                 size: 16,
                                               )
                                             : null,

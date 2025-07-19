@@ -1,4 +1,5 @@
 // data/workout_history_manager.dart
+import 'package:fitness_kingdom/data/workout_days_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:fitness_kingdom/models/workout_history.dart';
@@ -44,12 +45,13 @@ class WorkoutHistoryManager {
   // Save a new workout history record
   Future<void> addWorkoutHistory(WorkoutHistory history) async {
     await _workoutHistoryBox.put(history.id, history);
-    print('Workout History for "${history.templateName}" saved successfully!');
-    for (var i in history.exercisesPerformed) {
-          i.sets.forEach((j)=>{
-            print(j.weight),
-            print(j.reps)
-          });
+    debugPrint(
+      'Workout History for "${history.templateName}" saved successfully!',
+    );
+    if (history.durationInMinutes >= 10.0) {
+      // save workout count as this day for calculate how many days worlout for one week
+      // this should not save twice for within one day (only one time for a day)
+      WorkoutDaysManager().saveWorkoutDay();
     }
   }
 

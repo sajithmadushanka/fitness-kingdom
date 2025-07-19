@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:easy_localization/easy_localization.dart'; // Ensure this is imported if used in ExerciseModel
+// Ensure this is imported if used in ExerciseModel
 
 part 'exercise.g.dart'; // This line will be generated
 

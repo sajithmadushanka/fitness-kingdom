@@ -1,8 +1,11 @@
 // main.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:fitness_kingdom/app.dart';
+import 'package:fitness_kingdom/data/weight_entry_manager.dart';
+import 'package:fitness_kingdom/data/workout_days_manager.dart';
 import 'package:fitness_kingdom/data/workout_template_manager.dart'; // Or your WorkoutTemplateRepository
 import 'package:fitness_kingdom/data/workout_history_manager.dart'; // NEW
+import 'package:fitness_kingdom/models/weight_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,7 +14,6 @@ import 'package:fitness_kingdom/models/exercise.dart';
 import 'package:fitness_kingdom/models/workout_history.dart'; // NEW
 import 'package:fitness_kingdom/models/workout_exercise_data.dart'; // NEW
 import 'package:fitness_kingdom/models/workout_set_data.dart'; // NEW
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,20 +26,24 @@ void main() async {
   // Register Hive Adapters for your models
   Hive.registerAdapter(WorkoutTemplateAdapter());
   Hive.registerAdapter(ExerciseModelAdapter());
-  Hive.registerAdapter(WorkoutHistoryAdapter());      // NEW
+  Hive.registerAdapter(WorkoutHistoryAdapter()); // NEW
   Hive.registerAdapter(WorkoutExerciseDataAdapter()); // NEW
-  Hive.registerAdapter(WorkoutSetDataAdapter());      // NEW
+  Hive.registerAdapter(WorkoutSetDataAdapter()); // NEW
+  Hive.registerAdapter(WeightEntryAdapter());
 
   // Initialize WorkoutTemplateManager (for saving templates)
-  await WorkoutTemplateManager().init(); // Assuming this is your template save manager
+  await WorkoutTemplateManager()
+      .init(); // Assuming this is your template save manager
   await WorkoutHistoryManager().init(); // NEW: Initialize history manager
+  await WeightEntryManager().init();
+  await WorkoutDaysManager().init();
 
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en', 'US')],
       path: 'assets/langs',
       fallbackLocale: const Locale('en', 'US'),
-      child: const MyApp()
+      child: const MyApp(),
     ),
   );
 }

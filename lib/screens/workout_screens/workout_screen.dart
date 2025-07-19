@@ -3,8 +3,6 @@ import 'package:fitness_kingdom/screens/template_screen/new_template_screen.dart
 import 'package:fitness_kingdom/screens/workout_screens/workout_tranning_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fitness_kingdom/models/workout_template.dart'; // Import your WorkoutTemplate model
-import 'package:fitness_kingdom/models/exercise.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart'; // Import your ExerciseModel
 
 class WorkoutScreen extends StatelessWidget {
@@ -22,12 +20,16 @@ class WorkoutScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Text(
-                'Workout',
-                style: TextStyle(fontSize: 20, color: Colors.black),
-              ),
-            ),
+            // Center(
+            //   child: Text(
+            //     'Workout',
+            //     style: TextStyle(
+            //       fontSize: 20,
+            //       color: Colors.black,
+            //       fontWeight: FontWeight.bold,
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 24),
 
             // Quick Start Section
@@ -49,11 +51,12 @@ class WorkoutScreen extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // _showWorkoutTemplateDialog(
-                          //   context,
-                          //   tem
-                          // ); // This currently shows a template dialog, not an empty workout.
-                          // You might want to rename this or create a separate dialog for empty workout.
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkoutTrackingScreen(),
+                            ),
+                          );
                         },
                         child: const Text('Start Empty Workout'),
                       ),
@@ -109,7 +112,7 @@ class WorkoutScreen extends StatelessWidget {
                     child: Text(
                       'No templates found. Create one!',
                       style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   );
@@ -139,86 +142,131 @@ class WorkoutScreen extends StatelessWidget {
         crossAxisCount: _getCrossAxisCount(context),
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
+        childAspectRatio: 1.1, // Reduced height
       ),
       itemCount: templates.length,
       itemBuilder: (context, index) {
         final template = templates[index];
-        return Card(
-          elevation: 2,
-          child: InkWell(
-            onLongPress: () {
-              _deleteDialog(context, template);
-            },
-            onTap: () {
-              // Handle template selection, e.g., show template details dialog
-              _showWorkoutTemplateDialog(
-                context,
-                template,
-              ); // You might want to pass the template data here
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Template Icon (you might want to add an icon field to WorkoutTemplate model)
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.fitness_center, // Placeholder icon
-                      color: colorScheme.onPrimaryContainer,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
 
-                  // Template Name
-                  Text(
-                    template.name,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            // boxShadow: [
+            //   BoxShadow(
+            //     color: colorScheme.shadow.withValues(alpha: 0.1),
+            //     blurRadius: 6,
+            //     offset: const Offset(0, 2),
+            //   ),
+            // ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onLongPress: () => _deleteDialog(context, template),
+              onTap: () => _showWorkoutTemplateDialog(context, template),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Dynamic icon based on template
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            _getTemplateIcon(template),
+                            color: colorScheme.onPrimaryContainer,
+                            size: 20,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Exercise count badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${template.exercises.length}',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
+                    const SizedBox(height: 12),
 
-                  // Exercise Count
-                  Text(
-                    '${template.exercises.length} exercises',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                  const Spacer(),
-
-                  // Last Workout
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      template.lastWorkoutDate != null
-                          ? _formatLastWorkoutDate(template.lastWorkoutDate!)
-                          : 'Never worked out',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSecondaryContainer,
+                    // Template name
+                    Text(
+                      template.name,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+
+                    // Exercise details
+                    Text(
+                      _getExercisesSummary(template),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+
+                    // Last workout indicator
+                    Row(
+                      children: [
+                        Icon(
+                          template.lastWorkoutDate != null
+                              ? Icons.access_time_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 12,
+                          color: colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            template.lastWorkoutDate != null
+                                ? _formatLastWorkoutDate(
+                                    template.lastWorkoutDate!,
+                                  )
+                                : 'Start workout',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -226,6 +274,37 @@ class WorkoutScreen extends StatelessWidget {
       },
     );
   }
+
+  // Helper method to get icon based on template type
+  IconData _getTemplateIcon(WorkoutTemplate template) {
+    // You can customize this based on your template categories or names
+    final name = template.name.toLowerCase();
+    if (name.contains('chest') || name.contains('push')) {
+      return Icons.fitness_center;
+    } else if (name.contains('leg') || name.contains('squat')) {
+      return Icons.directions_run;
+    } else if (name.contains('back') || name.contains('pull')) {
+      return Icons.sports_gymnastics;
+    } else if (name.contains('cardio') || name.contains('run')) {
+      return Icons.favorite;
+    } else if (name.contains('core') || name.contains('abs')) {
+      return Icons.self_improvement;
+    } else if (name.contains('arm') || name.contains('bicep')) {
+      return Icons.sports_martial_arts;
+    }
+    return Icons.fitness_center; // default
+  }
+
+  // Helper method to create a more informative exercise summary
+  String _getExercisesSummary(WorkoutTemplate template) {
+    final count = template.exercises.length;
+    if (count == 1) return '1 exercise';
+    if (count <= 3) return '$count exercises';
+    if (count <= 6) return '$count exercises • Quick';
+    return '$count exercises • Full workout';
+  }
+
+  // -------------------------------------
 
   String _formatLastWorkoutDate(DateTime lastWorkoutDate) {
     final now = DateTime.now();
@@ -434,6 +513,9 @@ _showDialogWorkout(BuildContext context) {
 }
 
 _showWorkoutTemplateDialog(BuildContext context, template) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -446,11 +528,11 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
           height: MediaQuery.of(context).size.height * 0.7,
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: colorScheme.shadow,
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -472,23 +554,20 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: colorScheme.surfaceContainerHighest,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
                           size: 20,
-                          color: Colors.black54,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
                     Text(
-                      template
-                          .name, // This should dynamically show the template name
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                      template.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     TextButton(
@@ -505,12 +584,13 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                           ),
                         );
                       },
-                      child: const Text(
+                      style: TextButton.styleFrom(
+                        foregroundColor: colorScheme.primary,
+                      ),
+                      child: Text(
                         'Edit',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colorScheme.primary,
                         ),
                       ),
                     ),
@@ -525,9 +605,8 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                   children: [
                     Text(
                       'Last Performed: Yesterday', // This should dynamically show the last workout date
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -560,7 +639,6 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                       Navigator.of(context).pop();
 
                       // Handle start workout
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -570,17 +648,18 @@ _showWorkoutTemplateDialog(BuildContext context, template) {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade500,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Start Workout',
-                      style: TextStyle(
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -601,57 +680,69 @@ Widget _buildExerciseItem(
   String exerciseName,
   String muscleGroup,
 ) {
-  print(image);
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          // Exercise Icon
-          Container(
-            margin: EdgeInsets.only(bottom: 5.0),
-            child: image != ""
-                ? Image.asset(image, width: 60, height: 60)
-                : Icon(Icons.fitness_center_outlined),
-          ),
+  return Builder(
+    builder: (context) {
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
 
-          const SizedBox(width: 16),
+      print(image);
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            children: [
+              // Exercise Icon
+              Container(
+                margin: const EdgeInsets.only(bottom: 5.0),
+                child: image != ""
+                    ? Image.asset(image, width: 60, height: 60)
+                    : Icon(
+                        Icons.fitness_center_outlined,
+                        size: 40,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+              ),
 
-          // Exercise Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exerciseName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
+              const SizedBox(width: 16),
+
+              // Exercise Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exerciseName,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      muscleGroup,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  muscleGroup,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Info Button
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: Icon(
-              Icons.help_outline,
-              size: 20,
-              color: Colors.blue.shade400,
-            ),
+              // Info Button
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  Icons.help_outline,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 

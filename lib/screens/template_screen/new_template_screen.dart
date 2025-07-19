@@ -93,7 +93,7 @@ class _NewTemplateScreenState extends State<NewTemplateScreen> {
         ValueListenableBuilder<List<ExerciseModel>>(
           valueListenable: _workoutManager.selectedExercisesNotifier,
           builder: (context, selectedExercises, child) {
-            print("el$selectedExercises");
+            debugPrint("el$selectedExercises");
 
             return SaveButton(
               isAddedExercise: selectedExercises.isNotEmpty,

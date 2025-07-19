@@ -1,4 +1,3 @@
-import 'package:fitness_kingdom/data/exercises.dart';
 import 'package:fitness_kingdom/data/workout_template_manager.dart';
 import 'package:fitness_kingdom/models/exercise.dart';
 import 'package:fitness_kingdom/models/workout_template.dart';

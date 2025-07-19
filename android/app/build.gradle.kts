@@ -1,14 +1,25 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+// Load the local.properties file
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.fitness_kingdom"
+    
+    // Dynamically assign these properties
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = localProperties.getProperty("flutter.ndkVersion")?.takeIf { it.isNotBlank() } ?: flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -20,20 +31,19 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.fitness_kingdom"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // Dynamically assign minSdk and targetSdk
+        minSdk = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: flutter.minSdkVersion
+        targetSdk = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: flutter.targetSdkVersion
+
+        // These values are already managed by the Flutter plugin from pubspec.yaml
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

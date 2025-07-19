@@ -56,6 +56,26 @@ Future<void> saveOrUpdateWorkoutTemplate(WorkoutTemplate template) async {
   await box.put(template.id, template);
   print("template save success ${template.id}");
 }
+// update lastworkout date
+Future<void> lastWorkoutDateUpdate(String temId, DateTime lastWorkoutDate) async {
+  final box = Hive.box<WorkoutTemplate>('workoutTemplatesBox');
+
+  // 1. Retrieve the existing WorkoutTemplate object using its ID (key)
+  final workoutTemplate = box.get(temId);
+
+  if (workoutTemplate != null) {
+    // 2. Modify the lastWorkoutDate property of the retrieved object
+    workoutTemplate.lastWorkoutDate = lastWorkoutDate;
+
+    // 3. Save the modified object back to Hive.
+    // When you call .save() on a HiveObject retrieved from the box,
+    // Hive automatically persists the changes for that entry.
+    await workoutTemplate.save();
+    print('Workout template "${workoutTemplate.name}" (ID: $temId) lastWorkoutDate updated to $lastWorkoutDate');
+  } else {
+    print('Error: Workout template with ID: $temId not found.');
+  }
+}
 
 Future<List<WorkoutTemplate>> getAllTemplates() async {
   final box = Hive.box<WorkoutTemplate>('workoutTemplatesBox');

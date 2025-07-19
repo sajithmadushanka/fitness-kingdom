@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// This widget encapsulates the BottomNavigationBar logic.
-// It receives the currently selected index and a callback function
-// to notify the parent when an item is tapped.
 class AppNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
@@ -36,17 +33,17 @@ class AppNavigationBar extends StatelessWidget {
           label: 'Progress',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_outlined),
-          activeIcon: Icon(Icons.person),
-          label: 'Profile',
+          icon: Icon(Icons.assignment_outlined),
+          activeIcon: Icon(Icons.assignment_outlined),
+          label: 'Exercises',
         ),
       ],
       currentIndex: selectedIndex,
-      selectedItemColor: colorScheme.primary, // Uses primary color from your theme
-      unselectedItemColor: colorScheme.onSurfaceVariant, // Uses a toned-down color from your theme
-      onTap: onItemTapped, // Pass the callback to handle taps
-      type: BottomNavigationBarType.fixed, // Keeps all items visible
-      backgroundColor: colorScheme.surface, // Uses surface color from your theme
+      selectedItemColor: colorScheme.primary,
+      unselectedItemColor: colorScheme.onSurfaceVariant,
+      onTap: onItemTapped,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: colorScheme.surface,
       elevation: 8,
     );
   }
